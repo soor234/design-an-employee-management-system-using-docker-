@@ -1,0 +1,49 @@
+#!bin/bash
+mkdir aws.txt
+cat aws.txt
+vi aws#!/bin/bash
+
+# Variables
+KEY_NAME="webapp-key"
+SEC_GROUP="webapp-sg"
+INSTANCE_NAME="WebAppInstance"
+AMI_ID="ami-0c02fb55956c7d316"  # Amazon Linux 2 in us-east-1
+INSTANCE_TYPE="t2.micro"
+REGION="us-east-1"
+S3_BUCKET="my-webapp-backup-bucket-$(date +%s)"
+
+# Create key pair
+aws ec2 create-key-pair --key-name $KEY_NAME --query 'KeyMaterial' --output text > ${KEY_NAME}.pem
+chmod 400 ${KEY_NAME}.pem
+
+# Create security group
+aws ec2 create-security-group --group-name $SEC_GROUP --description "Web app SG"
+
+# Allow HTTP & SSH access
+aws ec2 authorize-security-group-ingress --group-name $SEC_GROUP --protocol tcp --port 22 --cidr 0.0.0.0/0
+aws ec2 authorize-security-group-ingress --group-name $SEC_GROUP --protocol tcp --port 80 --cidr 0.0.0.0/0
+
+# Launch EC2
+INSTANCE_ID=$(aws ec2 run-instances \
+  --image-id $AMI_ID \
+  --count 1 \
+  --instance-type $INSTANCE_TYPE \
+  --key-name $KEY_NAME \
+  --security-groups $SEC_GROUP \
+  --user-data file://config/user-data.txt \
+  --query 'Instances[0].InstanceId' \
+  --output text)
+
+echo "Waiting for instance to start..."
+aws ec2 wait instance-running --instance-ids $INSTANCE_ID
+PUBLIC_IP=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
+
+echo "Web app deployed at: http://${PUBLIC_IP}"
+
+# Create S3 bucket and upload backup
+aws s3 mb s3://$S3_BUCKET
+aws s3 cp index.html s3://$S3_BUCKET/
+
+echo "Backup saved to: s3://$S3_BUCKET/index.html"
+.txt
+#
