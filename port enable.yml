@@ -1,0 +1,8 @@
+name:www.employeemanagee.com
+version:ngnix 12.3.4
+network: "firewall settings"
+ipv4 "172.168.1.9
+status"enable
+portno:8080
+port type:ssh/tcp/https
+status:  display
