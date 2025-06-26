@@ -12,3 +12,8 @@ create TABLE surya (
   NAME  Varchar(20)
   department  varchar?920)
 );
+  create TABLE Add (
+      id int STRING AUTO INCREMENT  foreign KEY
+      Name  varchar(20)
+      department  varchar(20)
+      );
